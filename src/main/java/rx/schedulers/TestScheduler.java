@@ -16,8 +16,8 @@
 package rx.schedulers;
 
 import java.util.Comparator;
-import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import rx.Scheduler;
@@ -31,7 +31,7 @@ import rx.subscriptions.Subscriptions;
  * advancing the clock at whatever pace you choose.
  */
 public class TestScheduler extends Scheduler {
-    private final Queue<TimedAction> queue = new PriorityQueue<TimedAction>(11, new CompareActionsByTime());
+    final Queue<TimedAction> queue = new PriorityBlockingQueue<TimedAction>(11, new CompareActionsByTime());
     private static long counter = 0;
 
     private static final class TimedAction {

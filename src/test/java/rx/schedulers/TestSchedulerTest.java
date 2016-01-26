@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import junit.framework.Assert;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -220,6 +221,40 @@ public class TestSchedulerTest {
             inOrder.verify(calledOp, times(1)).call();
         } finally {
             inner.unsubscribe();
+        }
+    }
+
+    @Test
+    public final void testConcurrentInsertionAndTimeChange() {
+        final TestScheduler scheduler = new TestScheduler();
+        new Thread() {
+            @Override public void run() {
+                while (true) {
+                    Thread.yield(); // Scheduling service lock is not fair
+                    final Scheduler.Worker inner = scheduler.createWorker();
+                    inner.schedule(new Action0()
+                    {
+                        @Override
+                        public void call()
+                        {
+                            // Does nothing
+                        }
+                    },1, TimeUnit.SECONDS);
+                }
+            }
+        }.start();
+        try
+        {
+            Thread.sleep(50);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        try
+        {
+            scheduler.advanceTimeBy(1, TimeUnit.SECONDS);
+        } catch(NullPointerException e) {
+            Assert.fail("unexpected NullPointerException : " + e);
         }
     }
 }
